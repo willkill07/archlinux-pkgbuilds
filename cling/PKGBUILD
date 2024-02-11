@@ -57,22 +57,7 @@ build() {
 
 package() {
     cd "$srcdir/build"
-
     DESTDIR="$pkgdir" ninja install
-
     install -d "$pkgdir/usr/bin"
-    ln -s "$pkgdir/opt/cling/bin/cling" "$pkgdir/usr/bin/cling"
-    
-    # sed -i "s,$srcdir/build,$pkgdir/opt/cling,g" \
-    #	"$pkgdir/opt/cling/lib/cmake/cling/ClingTargets.cmake"
-
-    # include CMake target import file so that other packages are able to use
-    # `find_package(Cling REQUIRED)`
-    # install -Dm644 "$srcdir/build/tools/cling/lib/cmake/cling/ClingTargets.cmake" \
-    #     "$pkgdir/opt/cling/lib/cmake/cling"
-
-    # adjust cling target locations
-    # sed -Ei 's#(IMPORTED_LOCATION_RELEASE) ".*/([^/]*)"#\1 "/opt/cling/lib/\2"#g' \
-    #     "$pkgdir/opt/cling/lib/cmake/cling/ClingTargets.cmake"
-    
+    ln -s "$pkgdir/opt/cling/bin/cling" "$pkgdir/usr/bin/cling"    
 }
