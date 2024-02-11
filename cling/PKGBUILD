@@ -35,20 +35,23 @@ pkgver() {
 }
 
 build() {
-
+    # there's an upstream bug that incorrectly checks if we are in/out of llvm tree
+    sed -i '/target_compile_definitions(clingInterpreter PUBLIC/d' \
+	"$srcdir/cling/lib/Interpreter/CMakeLists.txt"
+    
     cmake \
 	-B "$srcdir/build" \
 	-S "$srcdir/cling-llvm/llvm" \
-        -G Ninja \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX="/opt/cling" \
-	-DLLVMDIR="/opt/cling" \
-	-DLLVM_EXTERNAL_PROJECTS=cling \
-	-DLLVM_EXTERNAL_CLING_SOURCE_DIR="$srcdir/cling" \
+	-G Ninja \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_INSTALL_PREFIX="/opt/cling" \
 	-DLLVM_ENABLE_PROJECTS="clang" \
+	-DLLVM_ENABLE_RUNTIMES="pstl" \
+	-DLLVM_EXTERNAL_PROJECTS="cling" \
+	-DLLVM_EXTERNAL_CLING_SOURCE_DIR="$srcdir/cling" \
 	-DLLVM_TARGETS_TO_BUILD="X86" \
 	-DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD="NVPTX"
-
+    
     cmake --build "$srcdir/build"
 }
 
@@ -57,24 +60,19 @@ package() {
 
     DESTDIR="$pkgdir" ninja install
 
-    install -Dm755 "$startdir/cling-wrapper" "$pkgdir/usr/bin/cling"    
-
-    sed -i "s,$srcdir/build,$pkgdir/opt/cling,g" \
-	"$pkgdir/opt/cling/lib/cmake/cling/ClingTargets.cmake"
+    install -d "$pkgdir/usr/bin"
+    ln -s "$pkgdir/opt/cling/bin/cling" "$pkgdir/usr/bin/cling"
+    
+    # sed -i "s,$srcdir/build,$pkgdir/opt/cling,g" \
+    #	"$pkgdir/opt/cling/lib/cmake/cling/ClingTargets.cmake"
 
     # include CMake target import file so that other packages are able to use
     # `find_package(Cling REQUIRED)`
-    install -Dm644 "$srcdir/build/tools/cling/lib/cmake/cling/ClingTargets.cmake" \
-        "$pkgdir/opt/cling/lib/cmake/cling"
+    # install -Dm644 "$srcdir/build/tools/cling/lib/cmake/cling/ClingTargets.cmake" \
+    #     "$pkgdir/opt/cling/lib/cmake/cling"
 
     # adjust cling target locations
-    sed -Ei 's#(IMPORTED_LOCATION_RELEASE) ".*/([^/]*)"#\1 "/opt/cling/lib/\2"#g' \
-        "$pkgdir/opt/cling/lib/cmake/cling/ClingTargets.cmake"
-
-    # omit man page for clang's scan-build
-    rm -f "$pkgdir/opt/cling/share/man/man1/scan-build.1"
-
-    # remove empty directories
-    rmdir -p --ignore-fail-on-non-empty "$pkgdir/opt/cling/share/man/man1"
-    rmdir -p --ignore-fail-on-non-empty "$pkgdir/opt/cling/include/cling/cint"
+    # sed -Ei 's#(IMPORTED_LOCATION_RELEASE) ".*/([^/]*)"#\1 "/opt/cling/lib/\2"#g' \
+    #     "$pkgdir/opt/cling/lib/cmake/cling/ClingTargets.cmake"
+    
 }

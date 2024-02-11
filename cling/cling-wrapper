@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-glob_of_dir=(/opt/cling/lib/clang/*)
-
-resource_dir="${glob_of_dir[0]}"
-
-/opt/cling/bin/cling -resource-dir "${resource_dir}" $@
