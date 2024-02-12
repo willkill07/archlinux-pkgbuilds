@@ -1,0 +1,87 @@
+# Maintainer: Will Killian <_@willkill07.dev>
+# Adopted from work by:
+#   Darjan Krijan [https://disc-kuraudo.eu]
+#   Jesse R Codling <codling@umich.edu>
+
+pkgname=(aocc aocl-aocc)
+major=4
+minor=1
+patch=0
+pkgver=${major}.${minor}.${patch}
+pkgrel=1
+pkgdesc="AMD Development Toolchain"
+arch=('x86_64')
+license=('custom')
+url="https://developer.amd.com/"
+source=(
+    "https://download.amd.com/developer/eula/aocl/aocl-${major}-${minor}/aocl-linux-aocc-${pkgver}.tar.gz"
+    "https://download.amd.com/developer/eula/aocc/aocc-${major}-${minor}/aocc-compiler-${pkgver}.tar"
+    "aocl-aocc.install"
+    "aocc.install"
+    "aocc-modulefile"
+    "aocl-modulefile"
+)
+options=('staticlibs' '!strip' 'libtool')
+makedepends=('patchelf')
+optdepends=('env-modules')
+sha256sums=(
+    'SKIP'
+    'SKIP'
+    'SKIP'
+    'SKIP'
+    'SKIP'
+    'SKIP'
+)
+
+package_aocl-aocc() {
+    install=${pkgname}.install
+
+    prefix="${pkgdir}/opt/amd/aocl"
+    mkdir -p "${prefix}"
+
+    cd "${srcdir}/aocl-linux-aocc-${pkgver}"
+
+    ./install.sh -t ${prefix} -i lp64
+
+    # strip unneeded directories
+    mv "${prefix}/${pkgver}"/* "${prefix}"
+    rm -r "${prefix}/${pkgver}"
+
+    grep -rl "${pkgdir}" "${prefix}" | xargs -n1 sed -i "s,${pkgdir},,g"
+
+    # add missing libFLAME dependency on BLIS
+    patchelf --add-needed /opt/amd/aocl/aocc/lib_ILP64/libblis-mt.so ${prefix}/aocc/lib_ILP64/libflame.so
+    patchelf --add-needed /opt/amd/aocl/aocc/lib_LP64/libblis-mt.so ${prefix}/aocc/lib_LP64/libflame.so
+
+    # fix amd-libs.cfg containing ${pkgdir}
+    sed -e "s:=.*/opt:=/opt:g" -i ${prefix}/aocc/amd-libs.cfg
+
+    # env-modules (optional)
+    cp ${startdir}/aocl-modulefile ${prefix}/aocc/modulefile
+    mkdir -p ${pkgdir}/opt/amd/modulefiles
+    ln -s /opt/amd/aocl/aocc/modulefile ${pkgdir}/opt/amd/modulefiles/${pkgname}
+}
+
+package_aocc() {
+    # default flags for compiler
+    # edit this or /etc/makepkg.conf to your liking for default flags for your architecutre
+    # like e.g. "-O3 -march=znver2 -mtune=znver2"
+    _default_flags="${CFLAGS}"
+
+    # path hardcoded in aocc.install. if you change this, change paths there as well
+
+    prefix=${pkgdir}/opt/amd/aocc
+    options=('staticlibs' '!strip' 'libtool')
+
+    mkdir -p ${prefix}
+    cp -rp ${srcdir}/${pkgname}-compiler-${pkgver}/* ${prefix}
+    
+    ln -s /opt/amd/aocc/bin/clang   ${prefix}/bin/aocc-clang
+    ln -s /opt/amd/aocc/bin/clang++ ${prefix}/bin/aocc-clang++
+    ln -s /opt/amd/aocc/bin/flang   ${prefix}/bin/aocc-flang
+    
+    # env-modules (optional)
+    cp ${startdir}/${pkgname}-modulefile ${prefix}/modulefile
+    mkdir -p ${pkgdir}/opt/amd/modulefiles
+    ln -s /opt/amd/aocc/modulefile ${pkgdir}/opt/amd/modulefiles/${pkgname}
+}

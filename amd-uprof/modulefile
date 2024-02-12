@@ -1,0 +1,30 @@
+#%Module1.0
+#
+# Created by Darjan Krijan [https://disc-kuraudo.eu]
+#
+
+set MODULE      "uprof"
+set BASE_DIR    "/opt/amd"
+set VERSION     "4.1.424"
+set MODULE_ROOT "${BASE_DIR}/${MODULE}"
+set MODULE_TEXT "AMD uProf performance analysis tool"
+
+prepend-path PATH         ${MODULE_ROOT}/bin
+prepend-path CPATH        ${MODULE_ROOT}/include
+prepend-path LIBRARY_PATH ${MODULE_ROOT}/lib/x64
+prepend-path MANPATH      ${MODULE_ROOT}/bin/Help
+prepend-path PATH         ${MODULE_ROOT}/bin/AMDPerf
+prepend-path PYTHONPATH   ${MODULE_ROOT}/bin/AMDPerf
+
+module-whatis "${MODULE_TEXT} version ${VERSION}"
+
+proc ModulesHelp {} {
+	global MODULE_TEXT
+	puts stderr "This module sets up the environment for ${MODULE_TEXT}"
+	puts stderr "by adapting the following environment variables:"
+	puts stderr "PATH"
+	puts stderr "CPATH"
+	puts stderr "LIBRARY_PATH"
+	puts stderr "MANPATH"
+	puts stderr "PYTHONPATH"
+}
