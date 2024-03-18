@@ -5,7 +5,7 @@
 
 pkgname=(aocc aocl-aocc)
 major=4
-minor=1
+minor=2
 patch=0
 pkgver=${major}.${minor}.${patch}
 pkgrel=1
