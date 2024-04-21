@@ -1,5 +1,5 @@
 pkgname=('clang-custom-release')
-_pkgver=18.1.1
+_pkgver=18.1.4
 _pkg_suffix=""
 _pkgver_suffix=${_pkgver}
 _pkgver_dash_suffix=${_pkgver}
